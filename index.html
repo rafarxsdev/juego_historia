@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Juego de Memoria</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #inicio p {
+            font-size: 22px;
+            /* Aumenta el tamaño del texto */
+            font-weight: bold;
+            /* Opcional: lo hace más resaltado */
+            color: #333;
+            /* Color oscuro para mejor visibilidad */
+            margin-bottom: 15px;
+        }
+
+
+        #juego,
+        #pregunta,
+        #resultado,
+        #final {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .imagenes {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .imagenes img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .imagen-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+            /* mismo tamaño que la imagen */
+        }
+
+        .imagen-item p {
+            margin-top: 8px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #222;
+        }
+
+
+        .opciones {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            font-size: 30px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #cronometro {
+            font-size: 30px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        #pregunta {
+            font-size: 24px;
+            /* Aumenta el tamaño de la pregunta */
+            font-weight: bold;
+            /* (Opcional) Negrita */
+            color: #2c3e50;
+            /* (Opcional) Color */
+        }
+
+        #puntaje {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        #puntajeFinal {
+            font-size: 28px;
+            /* Aumenta tamaño del puntaje final */
+            font-weight: bold;
+            color: #2c3e50;
+            /* Un gris oscuro elegante */
+            margin-top: 15px;
+        }
+
+        #resultado {
+            font-size: 52px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #resultado.correcto {
+            color: green;
+        }
+
+        #resultado.incorrecto {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Juego de las dos polis (Atenas - Esparta)</h1>
+
+    <!-- Pantalla de inicio -->
+    <div id="inicio">
+        <p>Memoriza las imágenes en poco tiempo y responde las preguntas. ¡Máximo 6 intentos!</p>
+        <button onclick="iniciarJuego()">Jugar</button>
+    </div>
+
+    <!-- Zona de juego: memorizar imágenes -->
+    <div id="juego">
+        <h2>Memoriza estas imágenes</h2>
+        <div id="cronometro">Tiempo: 8</div>
+        <div class="imagenes" id="imagenes"></div>
+    </div>
+
+    <!-- Pregunta -->
+    <div id="pregunta">
+        <h2 id="textoPregunta"></h2>
+        <div class="opciones" id="opciones"></div>
+    </div>
+
+    <!-- Resultado parcial -->
+    <div id="resultado"></div>
+
+    <!-- Pantalla final -->
+    <div id="final">
+        <h2>Juego terminado</h2>
+        <p id="puntajeFinal"></p>
+        <button onclick="reiniciarJuego()">Reiniciar</button>
+    </div>
+
+    <script>
+        // Lista de preguntas con imágenes, opciones y respuesta correcta
+        const preguntas = [
+            {//1
+                imagenes: ["img/trirreme.jpeg", "img/esparta.webp", "img/holopitas.jpeg", "img/corinto.jpeg"],
+                pregunta: "1. ¿Cuál era la ciudad-Estado conocida por su poder naval?",
+                opciones: ["Atenas", "Esparta", "Tebas", "Corinto"],
+                respuesta: "Atenas"
+            },
+            {//2
+                imagenes: ["img/esparta.webp", "img/acropolis_atenas.jpeg", "img/mileto.jpeg", "img/delfos.jpg"],
+                pregunta: "2. ¿Qué ciudad-Estado educaba a los jóvenes para la guerra desde pequeños?",
+                opciones: ["Esparta", "Atenas", "Mileto", "Delfos"],
+                respuesta: "Esparta"
+            },
+            {//3
+                imagenes: ["img/acropolis_atenas.jpeg", "img/esparta.webp", "img/roma.jpeg", "img/trirreme.jpeg"],
+                pregunta: "3. ¿Dónde surgió la democracia?",
+                opciones: ["Atenas", "Esparta", "Roma", "Creta"],
+                respuesta: "Atenas"
+            },
+            {//4
+                imagenes: ["img/acropolis_esparta.jpeg", "img/escudo_espartano.jpeg", "img/acropolis_atenas.jpeg", "img/micenas.jpeg"],
+                pregunta: "4. ¿Cuál ciudad era famosa por su vida cultural y filosófica?",
+                opciones: ["Esparta", "Olimpia", "Atenas", "Micenas"],
+                respuesta: "Atenas"
+            },
+            {//5
+                imagenes: ["img/acropolis_atenas.jpeg", "img/acropolis_esparta.jpeg", "img/corinto.jpeg", "img/trirreme.jpeg"],
+                pregunta: "5. ¿Qué ciudad tenía un sistema político con dos reyes y una fuerte oligarquía?",
+                opciones: ["Atenas", "Esparta", "Corinto", "Mileto"],
+                respuesta: "Esparta"
+            },
+            {//6
+                imagenes: ["img/acropolis_esparta.jpeg", "img/roma.jpeg", "img/fiestas_dionisio.jpeg", "img/delfos.jpg"],
+                pregunta: "6. ¿Dónde se celebraban las fiestas en honor a Dionisio, origen del teatro?",
+                opciones: ["Esparta", "Roma", "Atenas", "Delfos"],
+                respuesta: "Atenas"
+            },
+            /*{
+              imagenes: ["img/esparta.png","img/atenas.png","img/tebas.png","img/corinto.png"],
+              pregunta: "¿Qué ciudad dependía de los ilotas (esclavos agrícolas) para sobrevivir?",
+              opciones: ["Esparta","Atenas","Tebas","Corinto"],
+              respuesta: "Esparta"
+            },
+            {
+              imagenes: ["img/atenas.png","img/esparta.png","img/olimpa.png","img/delfos.png"],
+              pregunta: "¿Dónde surgieron los Juegos Panatenaicos en honor a Atenea?",
+              opciones: ["Atenas","Esparta","Olimpia","Delfos"],
+              respuesta: "Atenas"
+            }*/
+        ];
+
+
+        let rondaActual = 0;
+        let puntaje = 0;
+        let tiempo = 8;
+        let temporizador;
+
+        function iniciarJuego() {
+            document.getElementById("inicio").style.display = "none";
+            rondaActual = 0;
+            puntaje = 0;
+            mostrarRonda();
+        }
+
+        function mostrarRonda() {
+            if (rondaActual >= preguntas.length) {
+                mostrarFinal();
+                return;
+            }
+
+            // Mostrar imágenes
+            const juegoDiv = document.getElementById("juego");
+            const imgContainer = document.getElementById("imagenes");
+            juegoDiv.style.display = "block";
+            document.getElementById("pregunta").style.display = "none";
+            document.getElementById("resultado").style.display = "none";
+
+            imgContainer.innerHTML = "";
+            /*preguntas[rondaActual].imagenes.forEach(ruta => {
+              const img = document.createElement("img");
+              img.src = ruta;
+              imgContainer.appendChild(img);
+            });*/
+            preguntas[rondaActual].imagenes.forEach((ruta, index) => {
+                const contenedor = document.createElement("div");
+                contenedor.classList.add("imagen-item");
+
+                const img = document.createElement("img");
+                img.src = ruta;
+
+                const texto = document.createElement("p");
+                texto.textContent = preguntas[rondaActual].opciones[index]; // usa la opción como texto debajo
+
+                contenedor.appendChild(img);
+                contenedor.appendChild(texto);
+                imgContainer.appendChild(contenedor);
+            });
+
+
+            tiempo = 8; // tiempo en segundos
+            document.getElementById("cronometro").textContent = "Tiempo: " + tiempo;
+            temporizador = setInterval(actualizarCronometro, 1000);
+        }
+
+        function actualizarCronometro() {
+            tiempo--;
+            document.getElementById("cronometro").textContent = "Tiempo: " + tiempo;
+            if (tiempo <= 0) {
+                clearInterval(temporizador);
+                mostrarPregunta();
+            }
+        }
+
+        function mostrarPregunta() {
+            document.getElementById("juego").style.display = "none";
+            document.getElementById("pregunta").style.display = "block";
+
+            const p = preguntas[rondaActual];
+            document.getElementById("textoPregunta").textContent = p.pregunta;
+
+            const opcionesDiv = document.getElementById("opciones");
+            opcionesDiv.innerHTML = "";
+
+            p.opciones.forEach(op => {
+                const btn = document.createElement("button");
+                btn.textContent = op;
+                btn.onclick = () => validarRespuesta(op);
+                opcionesDiv.appendChild(btn);
+            });
+        }
+
+        function validarRespuesta(respuestaSeleccionada) {
+            const resultadoDiv = document.getElementById("resultado");
+            resultadoDiv.style.display = "block";
+
+            if (respuestaSeleccionada === preguntas[rondaActual].respuesta) {
+                resultadoDiv.textContent = "¡Correcto! ✅";
+                resultadoDiv.className = "correcto";
+                puntaje++;
+            } else {
+                resultadoDiv.textContent = "Incorrecto ❌. Respuesta correcta: " + preguntas[rondaActual].respuesta;
+                resultadoDiv.className = "incorrecto";
+            }
+
+            rondaActual++;
+            setTimeout(mostrarRonda, 2000);
+        }
+
+        function mostrarFinal() {
+            document.getElementById("juego").style.display = "none";
+            document.getElementById("pregunta").style.display = "none";
+            document.getElementById("resultado").style.display = "none";
+            document.getElementById("final").style.display = "block";
+
+            document.getElementById("puntajeFinal").textContent = "Tu puntaje fue: " + puntaje + " de " + preguntas.length + " preguntas";
+        }
+
+        function reiniciarJuego() {
+            document.getElementById("final").style.display = "none";
+            document.getElementById("inicio").style.display = "block";
+        }
+    </script>
+</body>
+
+</html>
